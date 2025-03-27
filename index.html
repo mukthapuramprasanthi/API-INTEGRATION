@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather & News Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #1e1e1e;
+            color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        /* Landing Page Section */
+        .landing-page {
+            background-image: url('https://source.unsplash.com/1600x900/?technology');
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+            color: #fff;
+            position: relative;
+        }
+
+        .landing-title {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #f39c12;
+            margin-bottom: 30px;
+        }
+
+        .landing-buttons {
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn {
+            background-color: #2980b9;
+            color: #fff;
+            padding: 15px 30px;
+            font-size: 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #3498db;
+        }
+
+        .container {
+            width: 80%;
+            max-width: 1200px;
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #333;
+            border-radius: 12px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            font-size: 3rem;
+            color: #f39c12;
+            margin-bottom: 40px;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .active-page {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .btn {
+                font-size: 1.2rem;
+                padding: 12px 24px;
+            }
+
+            .landing-title {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .landing-title {
+                font-size: 1.5rem;
+            }
+
+            .btn {
+                font-size: 1rem;
+                padding: 10px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Landing Page (Dashboard) -->
+<div class="landing-page">
+    <h1 class="landing-title">Weather & News Dashboard</h1>
+    <div class="landing-buttons">
+        <button class="btn" onclick="showPage('weatherPage')">Weather</button>
+        <button class="btn" onclick="showPage('newsPage')">News</button>
+    </div>
+</div>
+
+<!-- Main Content (Weather and News) -->
+<div class="container">
+    <div class="page" id="weatherPage">
+        <div class="card">
+            <div class="weather-card" id="weather-card">
+                <h3>Weather Information</h3>
+                <div class="weather-details" id="weather-info">
+                    <p>Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page" id="newsPage">
+        <div class="card">
+            <div class="news-card" id="news-card">
+                <h3>Latest News from WSJ</h3>
+                <div class="news-details" id="news-info">
+                    <p>Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // OpenWeather API Integration
+    const weatherApiKey = '1ad0e4ca8dd337278e16d25c5e3912d3';
+    const lat = '13.6267'; // Example latitude (Tirupati, India)
+    const lon = '79.4192'; // Example longitude (Tirupati, India)
+    const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${weatherApiKey}&units=metric`;
+
+    async function fetchWeatherData() {
+        try {
+            const response = await fetch(weatherUrl);
+            const data = await response.json();
+            const weatherCard = document.getElementById('weather-info');
+            const temperature = data.main.temp;
+            const weatherDescription = data.weather[0].description;
+            const weatherIcon = `https://openweathermap.org/img/wn/${data.weather[0].icon}.png`;
+
+            document.getElementById('weather-card').style.backgroundImage = `url('https://source.unsplash.com/1600x900/?weather')`; // Random weather image
+
+            weatherCard.innerHTML = `
+                <p><strong>${data.name}</strong></p>
+                <p>${temperature}°C</p>
+                <p>${weatherDescription}</p>
+                <img src="${weatherIcon}" alt="weather icon" />
+            `;
+        } catch (error) {
+            console.error('Error fetching weather data:', error);
+        }
+    }
+
+    // NewsAPI for WSJ integration
+    const newsApiKey = 'e2314706779449eda1b8405add73ea14';
+    const wsjUrl = `https://newsapi.org/v2/everything?domains=wsj.com&apiKey=${newsApiKey}`;
+
+    async function fetchNewsData() {
+        try {
+            const response = await fetch(wsjUrl);
+            const data = await response.json();
+            const newsCard = document.getElementById('news-info');
+            
+            // Clear previous content
+            newsCard.innerHTML = '';
+            document.getElementById('news-card').style.backgroundImage = `url('https://source.unsplash.com/1600x900/?business')`; // Random business image
+
+            data.articles.forEach(article => {
+                const articleElement = document.createElement('div');
+                articleElement.classList.add('news-item');
+                articleElement.innerHTML = `
+                    <a href="${article.url}" target="_blank">${article.title}</a>
+                    <p>${article.description || 'No description available'}</p>
+                `;
+                newsCard.appendChild(articleElement);
+            });
+        } catch (error) {
+            console.error('Error fetching news data:', error);
+        }
+    }
+
+    // Show the selected page and hide others
+    function showPage(pageId) {
+        const pages = document.querySelectorAll('.page');
+        pages.forEach(page => page.classList.remove('active-page'));
+        document.getElementById(pageId).classList.add('active-page');
+
+        if (pageId === 'weatherPage') {
+            fetchWeatherData();
+        } else if (pageId === 'newsPage') {
+            fetchNewsData();
+        }
+    }
+
+    // Default page
+    window.onload = () => {
+        showPage('weatherPage');
+    };
+</script>
+
+</body>
+</html>
